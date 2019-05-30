@@ -1,6 +1,7 @@
 use lambda_runtime::{error::HandlerError, lambda, Context};
 use serde_json::Value;
 
+#[cfg_attr(tarpaulin, skip)]
 fn main() {
     lambda!(handler)
 }
