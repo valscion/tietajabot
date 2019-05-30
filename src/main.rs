@@ -1,34 +1,55 @@
-use lambda_http::{lambda, IntoResponse, Request};
-use lambda_runtime::{error::HandlerError, Context};
-use serde_json::json;
 
-#[cfg_attr(tarpaulin, skip)]
+use rand::Rng;
+use std::cmp::Ordering;
+use std::io;
+
 fn main() {
-    lambda!(handler)
-}
+    println!("Guess the number!");
 
-fn handler(_: Request, _: Context) -> Result<impl IntoResponse, HandlerError> {
-    // `serde_json::Values` impl `IntoResponse` by default
-    // creating an application/json response
-    Ok(json!({
-    "message": "Go Serverless v1.0! Your function executed successfully!"
-    }))
-}
+    let secret_number = rand::thread_rng().gen_range(1, 101);
+    let mut guesses = 0;
+    let mut previous_guess_direction = "UNKNOWN";
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+    loop {
+        println!("Please input your guess number {}.", guesses + 1);
 
-    #[test]
-    fn handler_handles() {
-        let request = Request::default();
-        let expected = json!({
-        "message": "Go Serverless v1.0! Your function executed successfully!"
-        })
-        .into_response();
-        let response = handler(request, Context::default())
-            .expect("expected Ok(_) value")
-            .into_response();
-        assert_eq!(response.body(), expected.body())
+        let mut guess = String::new();
+
+        io::stdin()
+            .read_line(&mut guess)
+            .expect("Failed to read line");
+
+        let guess: u32 = match guess.trim().parse() {
+            Ok(num) => num,
+            Err(_) => continue,
+        };
+        guesses += 1;
+
+        println!("You guessed: {}", guess);
+
+        match guess.cmp(&secret_number) {
+            Ordering::Less => {
+                println!("Too small!");
+                match previous_guess_direction {
+                    "LESS" => println!("Still going smaller, eh?"),
+                    "GREATER" => println!("Ok nice, now you know some boundaries"),
+                    _ => println!("Try again :)"),
+                };
+                previous_guess_direction = "LESS";
+            }
+            Ordering::Greater => {
+                println!("Too big!");
+                match previous_guess_direction {
+                    "LESS" => println!("Ok nice, now you know some boundaries"),
+                    "GREATER" => println!("Still going bigger, eh?"),
+                    _ => println!("Try again :)"),
+                };
+                previous_guess_direction = "GREATER"
+            }
+            Ordering::Equal => {
+                println!("You win with {} guesses!", guesses);
+                break;
+            }
+        }
     }
 }
