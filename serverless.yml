@@ -13,7 +13,7 @@
 service: tietajabot # NOTE: update this with your service name
 provider:
   name: aws
-  profile: nurmilaakso-tietaja
+  profile: ${env:AWS_PROFILE, ""}
   runtime: rust
   memorySize: 128
 # you can overwrite defaults here
