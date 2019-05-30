@@ -1,28 +1,34 @@
-use lambda_runtime::{error::HandlerError, lambda, Context};
-use serde_json::Value;
+use lambda_http::{lambda, IntoResponse, Request};
+use lambda_runtime::{error::HandlerError, Context};
+use serde_json::json;
 
 #[cfg_attr(tarpaulin, skip)]
 fn main() {
     lambda!(handler)
 }
 
-fn handler(event: Value, _: Context) -> Result<Value, HandlerError> {
-    Ok(event)
+fn handler(_: Request, _: Context) -> Result<impl IntoResponse, HandlerError> {
+    // `serde_json::Values` impl `IntoResponse` by default
+    // creating an application/json response
+    Ok(json!({
+    "message": "Go Serverless v1.0! Your function executed successfully!"
+    }))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     #[test]
     fn handler_handles() {
-        let event = json!({
-            "answer": 42
-        });
-        assert_eq!(
-            handler(event.clone(), Context::default()).expect("expected Ok(_) value"),
-            event
-        )
+        let request = Request::default();
+        let expected = json!({
+        "message": "Go Serverless v1.0! Your function executed successfully!"
+        })
+        .into_response();
+        let response = handler(request, Context::default())
+            .expect("expected Ok(_) value")
+            .into_response();
+        assert_eq!(response.body(), expected.body())
     }
 }
