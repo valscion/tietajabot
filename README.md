@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/valscion/tietajabot/badge.svg?branch=master)](https://coveralls.io/github/valscion/tietajabot?branch=master) [![Build Status](https://travis-ci.org/valscion/tietajabot.svg?branch=master)](https://travis-ci.org/valscion/tietajabot)
+
 # serverless AWS Rust template
 
 A sample template for bootstraping [Rustlang AWS Lambda](https://github.com/awslabs/aws-lambda-rust-runtime/) applications with ⚡ serverless framework ⚡.
