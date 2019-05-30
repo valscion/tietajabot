@@ -1,15 +1,15 @@
 [![Coverage Status](https://coveralls.io/repos/github/valscion/tietajabot/badge.svg?branch=master)](https://coveralls.io/github/valscion/tietajabot?branch=master) [![Build Status](https://travis-ci.org/valscion/tietajabot.svg?branch=master)](https://travis-ci.org/valscion/tietajabot)
 
-# serverless AWS Rust template
+# serverless AWS Rust HTTP template
 
-A sample template for bootstraping [Rustlang AWS Lambda](https://github.com/awslabs/aws-lambda-rust-runtime/) applications with ⚡ serverless framework ⚡.
+A sample template for bootstraping [Rustlang AWS Lambda](https://github.com/awslabs/aws-lambda-rust-runtime/) HTTP applications with ⚡ serverless framework ⚡.
 
 ## ✨ features
 
-* 🦀 Build Rustlang applications targeting AWS Lambda with ease
-* 🛵 Continuous integration testing with travis CI
-* 🚀 Continuous deployment with travis CI
-* 🧪 Getting started unit tests
+- 🦀 Build Rustlang applications targeting AWS Lambda with ease
+- 🛵 Continuous integration testing with travis CI
+- 🚀 Continuous deployment with travis CI
+- 🧪 Getting started tests
 
 ## 📦 install
 
@@ -19,29 +19,30 @@ Then then run the following in your terminal
 
 ```bash
 $ npx serverless install \
-  --url https://github.com/softprops/serverless-aws-rust \
-  --name my-new-app
+  --url https://github.com/softprops/serverless-aws-rust-http \
+  --name my-new-api
 ```
 
 This will download the source of a sample Rustlang application and unpack it as a new service named
-"my-new-app" in a directory called "my-new-app"
-
+"my-new-api" in a directory called "my-new-api"
 
 ## 🧙 how to be a wizard
 
-Assumming you have [aws credentials with appropriate deployment permissions configured](https://serverless.com/framework/docs/providers/aws/guide/credentials/) (if you already use any existing AWS tooling installed you likely already have this configured), you can impress your friends by creating a project that is _born_ in a production environment.
+Assumming you have [aws credentials with appropriate deployment permissions configured](https://serverless.com/framework/docs/providers/aws/guide/credentials/)
+(if you already use any existing AWS tooling installed you likely already have this configured), you can impress your friends by creating a project
+that is _born_ in a production environment.
 
 ```bash
 $ npx serverless install \
-  --url https://github.com/softprops/serverless-aws-rust \
-  --name my-new-app \
-  && cd my-new-app \
+  --url https://github.com/softprops/serverless-aws-rust-http \
+  --name my-new-api \
+  && cd my-new-api \
   && npm i \
   && npx serverless deploy
 ```
 
 `npm i` will make sure npm dependencies are installed. This only needs run once.
-The first time you run `npx serverless deploy` this project will pull down and compile the base set
+The first time you run `npx serverless deploy` it will pull down and compile the base set
 of dependencies and your application. Unless the dependencies change afterwards,
 this should only happen once, resulting in an out of the box rapid deployment
 cycle.
@@ -61,7 +62,7 @@ $ git remote add origin git@github.com:{username}/{my-new-service}.git
 ```
 
 Using the [travis cli](https://github.com/travis-ci/travis.rb#installation),
- bootstrap your git repos' travis integration.
+bootstrap your git repos' travis integration.
 
 ```bash
 $ travis enable
@@ -82,33 +83,94 @@ Finally, https://travis-ci.org/{username}/{my-new-service} in your browser and g
 With your function deployed you can now start triggering it using `serverless` framework directly or
 the AWS integration you've configured to trigger it on your behalf
 
-```bash
-$ npx serverless invoke -f hello -d '{"foo":"bar"}'
+Copy this sample apigateway request into a file called payload.json
+
+```json
+{
+  "path": "/test/hello",
+  "headers": {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, lzma, sdch, br",
+    "Accept-Language": "en-US,en;q=0.8",
+    "CloudFront-Forwarded-Proto": "https",
+    "CloudFront-Is-Desktop-Viewer": "true",
+    "CloudFront-Is-Mobile-Viewer": "false",
+    "CloudFront-Is-SmartTV-Viewer": "false",
+    "CloudFront-Is-Tablet-Viewer": "false",
+    "CloudFront-Viewer-Country": "US",
+    "Host": "wt6mne2s9k.execute-api.us-west-2.amazonaws.com",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36 OPR/39.0.2256.48",
+    "Via": "1.1 fb7cca60f0ecd82ce07790c9c5eef16c.cloudfront.net (CloudFront)",
+    "X-Amz-Cf-Id": "nBsWBOrSHMgnaROZJK1wGCZ9PcRcSpq_oSXZNQwQ10OTZL4cimZo3g==",
+    "X-Forwarded-For": "192.168.100.1, 192.168.1.1",
+    "X-Forwarded-Port": "443",
+    "X-Forwarded-Proto": "https"
+  },
+  "pathParameters": {
+    "proxy": "hello"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "us4z18",
+    "stage": "test",
+    "requestId": "41b45ea3-70b5-11e6-b7bd-69b5aaebc7d9",
+    "identity": {
+      "cognitoIdentityPoolId": "",
+      "accountId": "",
+      "cognitoIdentityId": "",
+      "caller": "",
+      "apiKey": "",
+      "sourceIp": "192.168.100.1",
+      "cognitoAuthenticationType": "",
+      "cognitoAuthenticationProvider": "",
+      "userArn": "",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36 OPR/39.0.2256.48",
+      "user": ""
+    },
+    "resourcePath": "/{proxy+}",
+    "httpMethod": "GET",
+    "apiId": "wt6mne2s9k"
+  },
+  "resource": "/{proxy+}",
+  "httpMethod": "GET",
+  "queryStringParameters": {
+    "name": "me"
+  },
+  "stageVariables": {
+    "stageVarName": "stageVarValue"
+  }
+}
+```
+
+Then invoke your function with a synthetic request
+
+```sh
+$ npx serverless invoke -f hello -d "$(cat payload.json)"
 ```
 
 ## 🔬 logs
 
-With your function deployed you can now tail
-it's logs right from your project
+With your function deployed you can now tail it's logs right from your project
 
-```bash
+```sh
 $ npx serverless logs -f hello
 ```
 
 ## 👴 retiring
 
-Good code should be easily replaceable. Good code should also be easily disposable. Retiring applications should be as easy as creating and deploying them them. The dual of `serverless deploy` is `serverless remove`. Use this for retiring services and cleaning up resources.
+Good code should be easily replaceable. Good code is should also be easily disposable. Retiring applications should be as easy as creating and deploying them them. The dual of `serverless deploy` is `serverless remove`. Use this for retiring services and cleaning up resources.
 
 ```bash
 $ npx serverless remove
 ```
 
-## ℹ️  additional information
+## ℹ️ additional information
 
-* See the [serverless-rust plugin's documentation](https://github.com/softprops/serverless-rust) for more information on plugin usage.
+- See the [serverless-rust plugin's documentation](https://github.com/softprops/serverless-rust) for more information on plugin usage.
 
-* See the [aws rust runtime's documentation](https://github.com/awslabs/aws-lambda-rust-runtime) for more information on writing Rustlang lambda functions
+- See the [aws rust runtime's documentation](https://github.com/awslabs/aws-lambda-rust-runtime) for more information on writing Rustlang lambda functions
 
 ## 👯 contributing
 
-This template's intent is to set a minimal baseline for getting engineers up an running with a set of repeatable best practices. See something you'd like in this template that would help others? Feel free to [open a new github issue](https://github.com/softprops/serverless-aws-rust/issues/new). Pull requests are also welcome.
+This template's intent is to set a minimal baseline for getting engineers up an running with a set of repeatable best practices. See something you'd like in this template that would help others? Feel free to [open a new github issue](https://github.com/softprops/serverless-aws-rust-http/issues/new). Pull requests are also welcome.
