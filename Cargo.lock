@@ -215,6 +215,7 @@ version = "0.1.0"
 dependencies = [
  "lambda_http 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lambda_runtime 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
