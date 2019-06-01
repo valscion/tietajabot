@@ -2,6 +2,7 @@
 use rand::Rng;
 use std::cmp::Ordering;
 use std::io;
+use std::io::Write;
 
 #[derive(Debug)]
 enum Knowledge {
@@ -22,12 +23,15 @@ fn main() {
 
     loop {
         match knowledge {
-            TotallyUnknown => println!("Value is between 1 - 100"),
-            LowerBoundaryKnown(lower) => println!("Answer is > {}", lower),
-            UpperBoundaryKnown(upper) => println!("Answer is < {}", upper),
-            BothBoundariesKnown(lower, upper) => println!("{} < answer < {}", lower, upper),
+            TotallyUnknown => println!("Answer is between 1 and 100"),
+            LowerBoundaryKnown(lower) => println!("Answer is between {} and 100", lower + 1),
+            UpperBoundaryKnown(upper) => println!("Answer is between 1 and {}", upper - 1),
+            BothBoundariesKnown(lower, upper) => {
+                println!("Answer is between {} and {}", lower + 1, upper - 1)
+            }
         }
-        println!("Please input your guess number {}.", guesses + 1);
+        print!("Please input your guess: ");
+        io::stdout().flush().expect("Failed to flush STDOUT");
 
         let mut guess = String::new();
 
@@ -35,17 +39,22 @@ fn main() {
             .read_line(&mut guess)
             .expect("Failed to read line");
 
+        // Move the cursor one up and re-write the previous line.
+        // This gets rid of the newline added by stdin().read_line call :D
+        print!("\u{001B}[1APlease input your guess: {}", guess.trim_end());
+
         let guess: u32 = match guess.trim().parse() {
             Ok(num) => num,
-            Err(_) => continue,
+            Err(_) => {
+                println!(" -> Was that really a number?");
+                continue;
+            }
         };
         guesses += 1;
 
-        println!("You guessed: {}", guess);
-
         match guess.cmp(&secret_number) {
             Ordering::Less => {
-                println!("Too small!");
+                println!(" -> Too small!");
                 knowledge = match knowledge {
                     TotallyUnknown => LowerBoundaryKnown(guess),
                     LowerBoundaryKnown(lower) => match lower.cmp(&guess) {
@@ -66,7 +75,7 @@ fn main() {
                 }
             }
             Ordering::Greater => {
-                println!("Too big!");
+                println!(" -> Too big!");
                 knowledge = match knowledge {
                     TotallyUnknown => UpperBoundaryKnown(guess),
                     LowerBoundaryKnown(lower) => BothBoundariesKnown(lower, guess),
@@ -87,7 +96,7 @@ fn main() {
                 }
             }
             Ordering::Equal => {
-                println!("You win with {} guesses!", guesses);
+                println!(" -> Correct! You win with {} guesses!", guesses);
                 break;
             }
         }
