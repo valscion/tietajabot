@@ -5,13 +5,10 @@ use std::io;
 use std::io::Write;
 
 #[derive(Debug)]
-enum Knowledge {
-    TotallyUnknown,
-    LowerBoundaryKnown(u32),
-    UpperBoundaryKnown(u32),
-    BothBoundariesKnown(u32, u32),
+struct Knowledge {
+    lower: u32,
+    upper: u32,
 }
-use Knowledge::{BothBoundariesKnown, LowerBoundaryKnown, TotallyUnknown, UpperBoundaryKnown};
 
 fn main() {
     println!("Guess the number!");
@@ -19,17 +16,16 @@ fn main() {
     let secret_number = rand::thread_rng().gen_range(1, 101);
     let mut guesses = 0;
 
-    let mut knowledge = TotallyUnknown;
+    let mut knowledge = Knowledge {
+        lower: 1,
+        upper: 100,
+    };
 
     loop {
-        match knowledge {
-            TotallyUnknown => println!("Answer is between 1 and 100"),
-            LowerBoundaryKnown(lower) => println!("Answer is between {} and 100", lower + 1),
-            UpperBoundaryKnown(upper) => println!("Answer is between 1 and {}", upper - 1),
-            BothBoundariesKnown(lower, upper) => {
-                println!("Answer is between {} and {}", lower + 1, upper - 1)
-            }
-        }
+        println!(
+            "Answer is between {} and {}",
+            knowledge.lower, knowledge.upper
+        );
         print!("Please input your guess: ");
         io::stdout().flush().expect("Failed to flush STDOUT");
 
@@ -55,44 +51,22 @@ fn main() {
         match guess.cmp(&secret_number) {
             Ordering::Less => {
                 println!(" -> Too small!");
-                knowledge = match knowledge {
-                    TotallyUnknown => LowerBoundaryKnown(guess),
-                    LowerBoundaryKnown(lower) => match lower.cmp(&guess) {
-                        Ordering::Less => LowerBoundaryKnown(guess),
-                        _ => {
-                            println!("You already knew the answer is higher than {}, why waste your guess?!", lower);
-                            knowledge
-                        }
-                    },
-                    UpperBoundaryKnown(upper) => BothBoundariesKnown(guess, upper),
-                    BothBoundariesKnown(lower, upper) => match lower.cmp(&guess) {
-                        Ordering::Less => BothBoundariesKnown(guess, upper),
-                        _ => {
-                            println!("You already knew the answer is higher than {}, why waste your guess?!", lower);
-                            knowledge
-                        }
-                    },
+                match knowledge.lower.cmp(&guess) {
+                    Ordering::Greater => println!(
+                        "You already knew the answer is at least {}, why waste your guess?!",
+                        knowledge.lower
+                    ),
+                    _ => knowledge.lower = guess + 1,
                 }
             }
             Ordering::Greater => {
                 println!(" -> Too big!");
-                knowledge = match knowledge {
-                    TotallyUnknown => UpperBoundaryKnown(guess),
-                    LowerBoundaryKnown(lower) => BothBoundariesKnown(lower, guess),
-                    UpperBoundaryKnown(upper) => match upper.cmp(&guess) {
-                        Ordering::Greater => UpperBoundaryKnown(guess),
-                        _ => {
-                            println!("You already knew the answer is lower than {}, why waste your guess?!", upper);
-                            knowledge
-                        }
-                    },
-                    BothBoundariesKnown(lower, upper) => match upper.cmp(&guess) {
-                        Ordering::Greater => BothBoundariesKnown(lower, guess),
-                        _ => {
-                            println!("You already knew the answer is lower than {}, why waste your guess?!", upper);
-                            knowledge
-                        }
-                    },
+                match knowledge.upper.cmp(&guess) {
+                    Ordering::Less => println!(
+                        "You already knew the answer is at most {}, why waste your guess?!",
+                        knowledge.upper
+                    ),
+                    _ => knowledge.upper = guess - 1,
                 }
             }
             Ordering::Equal => {
