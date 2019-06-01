@@ -16,8 +16,6 @@ fn main() {
 
     let secret_number = rand::thread_rng().gen_range(1, 101);
     let mut guesses = 0;
-    let mut largest_guess: Option<u32> = None;
-    let mut smallest_guess: Option<u32> = None;
 
     let mut knowledge = Knowledge::TotallyUnknown;
 
@@ -49,58 +47,48 @@ fn main() {
         match guess.cmp(&secret_number) {
             Ordering::Less => {
                 println!("Too small!");
-                if smallest_guess.is_none() {
-                    smallest_guess = Some(guess);
-                    if largest_guess.is_some() {
-                        knowledge = Knowledge::BothBoundariesKnown(
-                            smallest_guess.unwrap(),
-                            largest_guess.unwrap(),
-                        );
-                    } else {
-                        knowledge = Knowledge::LowerBoundaryKnown(smallest_guess.unwrap());
-                    }
-                } else {
-                    if smallest_guess.expect("There was no prev guess") < guess {
-                        smallest_guess = Some(guess);
-                        if largest_guess.is_some() {
-                            knowledge = Knowledge::BothBoundariesKnown(
-                                smallest_guess.unwrap(),
-                                largest_guess.unwrap(),
-                            );
-                        } else {
-                            knowledge = Knowledge::LowerBoundaryKnown(smallest_guess.unwrap());
+                knowledge = match knowledge {
+                    Knowledge::TotallyUnknown => Knowledge::LowerBoundaryKnown(guess),
+                    Knowledge::LowerBoundaryKnown(lower) => match lower.cmp(&guess) {
+                        Ordering::Less => Knowledge::LowerBoundaryKnown(guess),
+                        _ => {
+                            println!("Why did you waste your guess for nothing? That's stupid.");
+                            knowledge
                         }
-                    } else {
-                        println!("Why did you waste your guess for nothing? That's stupid.");
+                    },
+                    Knowledge::UpperBoundaryKnown(upper) => {
+                        Knowledge::BothBoundariesKnown(guess, upper)
                     }
+                    Knowledge::BothBoundariesKnown(lower, upper) => match lower.cmp(&guess) {
+                        Ordering::Less => Knowledge::BothBoundariesKnown(guess, upper),
+                        _ => {
+                            println!("Why did you waste your guess for nothing? That's stupid.");
+                            knowledge
+                        }
+                    },
                 }
             }
             Ordering::Greater => {
                 println!("Too big!");
-                if largest_guess.is_none() {
-                    largest_guess = Some(guess);
-                    if smallest_guess.is_some() {
-                        knowledge = Knowledge::BothBoundariesKnown(
-                            smallest_guess.unwrap(),
-                            largest_guess.unwrap(),
-                        );
-                    } else {
-                        knowledge = Knowledge::UpperBoundaryKnown(largest_guess.unwrap());
+                knowledge = match knowledge {
+                    Knowledge::TotallyUnknown => Knowledge::UpperBoundaryKnown(guess),
+                    Knowledge::LowerBoundaryKnown(lower) => {
+                        Knowledge::BothBoundariesKnown(lower, guess)
                     }
-                } else {
-                    if largest_guess.expect("There was no prev guess") > guess {
-                        largest_guess = Some(guess);
-                        if smallest_guess.is_some() {
-                            knowledge = Knowledge::BothBoundariesKnown(
-                                smallest_guess.unwrap(),
-                                largest_guess.unwrap(),
-                            );
-                        } else {
-                            knowledge = Knowledge::UpperBoundaryKnown(largest_guess.unwrap());
+                    Knowledge::UpperBoundaryKnown(upper) => match upper.cmp(&guess) {
+                        Ordering::Greater => Knowledge::UpperBoundaryKnown(guess),
+                        _ => {
+                            println!("Why did you waste your guess for nothing? That's stupid.");
+                            knowledge
                         }
-                    } else {
-                        println!("Why did you waste your guess for nothing? That's stupid.");
-                    }
+                    },
+                    Knowledge::BothBoundariesKnown(lower, upper) => match upper.cmp(&guess) {
+                        Ordering::Greater => Knowledge::BothBoundariesKnown(lower, guess),
+                        _ => {
+                            println!("Why did you waste your guess for nothing? That's stupid.");
+                            knowledge
+                        }
+                    },
                 }
             }
             Ordering::Equal => {
