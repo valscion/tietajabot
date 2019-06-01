@@ -52,7 +52,7 @@ fn main() {
                     Knowledge::LowerBoundaryKnown(lower) => match lower.cmp(&guess) {
                         Ordering::Less => Knowledge::LowerBoundaryKnown(guess),
                         _ => {
-                            println!("Why did you waste your guess for nothing? That's stupid.");
+                            println!("You already knew the answer is higher than {}, why waste your guess?!", lower);
                             knowledge
                         }
                     },
@@ -62,7 +62,7 @@ fn main() {
                     Knowledge::BothBoundariesKnown(lower, upper) => match lower.cmp(&guess) {
                         Ordering::Less => Knowledge::BothBoundariesKnown(guess, upper),
                         _ => {
-                            println!("Why did you waste your guess for nothing? That's stupid.");
+                            println!("You already knew the answer is higher than {}, why waste your guess?!", lower);
                             knowledge
                         }
                     },
@@ -78,14 +78,14 @@ fn main() {
                     Knowledge::UpperBoundaryKnown(upper) => match upper.cmp(&guess) {
                         Ordering::Greater => Knowledge::UpperBoundaryKnown(guess),
                         _ => {
-                            println!("Why did you waste your guess for nothing? That's stupid.");
+                            println!("You already knew the answer is lower than {}, why waste your guess?!", upper);
                             knowledge
                         }
                     },
                     Knowledge::BothBoundariesKnown(lower, upper) => match upper.cmp(&guess) {
                         Ordering::Greater => Knowledge::BothBoundariesKnown(lower, guess),
                         _ => {
-                            println!("Why did you waste your guess for nothing? That's stupid.");
+                            println!("You already knew the answer is lower than {}, why waste your guess?!", upper);
                             knowledge
                         }
                     },
