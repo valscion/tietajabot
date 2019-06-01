@@ -3,6 +3,14 @@ use rand::Rng;
 use std::cmp::Ordering;
 use std::io;
 
+#[derive(Debug)]
+enum Knowledge {
+    TotallyUnknown,
+    LowerBoundaryKnown(u32),
+    UpperBoundaryKnown(u32),
+    BothBoundariesKnown(u32, u32),
+}
+
 fn main() {
     println!("Guess the number!");
 
@@ -11,7 +19,10 @@ fn main() {
     let mut largest_guess: Option<u32> = None;
     let mut smallest_guess: Option<u32> = None;
 
+    let mut knowledge = Knowledge::TotallyUnknown;
+
     loop {
+        println!("Your knowledge is {:?}", knowledge);
         println!("Please input your guess number {}.", guesses + 1);
 
         let mut guess = String::new();
@@ -33,9 +44,25 @@ fn main() {
                 println!("Too small!");
                 if smallest_guess.is_none() {
                     smallest_guess = Some(guess);
+                    if largest_guess.is_some() {
+                        knowledge = Knowledge::BothBoundariesKnown(
+                            smallest_guess.unwrap(),
+                            largest_guess.unwrap(),
+                        );
+                    } else {
+                        knowledge = Knowledge::LowerBoundaryKnown(smallest_guess.unwrap());
+                    }
                 } else {
                     if smallest_guess.expect("There was no prev guess") < guess {
                         smallest_guess = Some(guess);
+                        if largest_guess.is_some() {
+                            knowledge = Knowledge::BothBoundariesKnown(
+                                smallest_guess.unwrap(),
+                                largest_guess.unwrap(),
+                            );
+                        } else {
+                            knowledge = Knowledge::LowerBoundaryKnown(smallest_guess.unwrap());
+                        }
                     } else {
                         println!("Why did you waste your guess for nothing? That's stupid.");
                     }
@@ -45,9 +72,25 @@ fn main() {
                 println!("Too big!");
                 if largest_guess.is_none() {
                     largest_guess = Some(guess);
+                    if smallest_guess.is_some() {
+                        knowledge = Knowledge::BothBoundariesKnown(
+                            smallest_guess.unwrap(),
+                            largest_guess.unwrap(),
+                        );
+                    } else {
+                        knowledge = Knowledge::UpperBoundaryKnown(largest_guess.unwrap());
+                    }
                 } else {
                     if largest_guess.expect("There was no prev guess") > guess {
                         largest_guess = Some(guess);
+                        if smallest_guess.is_some() {
+                            knowledge = Knowledge::BothBoundariesKnown(
+                                smallest_guess.unwrap(),
+                                largest_guess.unwrap(),
+                            );
+                        } else {
+                            knowledge = Knowledge::UpperBoundaryKnown(largest_guess.unwrap());
+                        }
                     } else {
                         println!("Why did you waste your guess for nothing? That's stupid.");
                     }
@@ -58,11 +101,5 @@ fn main() {
                 break;
             }
         }
-
-        println!(
-            "You know the number is between {} - {}",
-            smallest_guess.unwrap_or(1),
-            largest_guess.unwrap_or(100)
-        );
     }
 }
