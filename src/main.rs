@@ -22,7 +22,14 @@ fn main() {
     let mut knowledge = Knowledge::TotallyUnknown;
 
     loop {
-        println!("Your knowledge is {:?}", knowledge);
+        match knowledge {
+            Knowledge::TotallyUnknown => println!("Value is between 1 - 100"),
+            Knowledge::LowerBoundaryKnown(lower) => println!("Answer is > {}", lower),
+            Knowledge::UpperBoundaryKnown(upper) => println!("Answer is < {}", upper),
+            Knowledge::BothBoundariesKnown(lower, upper) => {
+                println!("{} < answer < {}", lower, upper)
+            }
+        }
         println!("Please input your guess number {}.", guesses + 1);
 
         let mut guess = String::new();
