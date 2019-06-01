@@ -1,34 +1,78 @@
-use lambda_http::{lambda, IntoResponse, Request};
-use lambda_runtime::{error::HandlerError, Context};
-use serde_json::json;
 
-#[cfg_attr(tarpaulin, skip)]
+use rand::Rng;
+use std::cmp::Ordering;
+use std::io;
+use std::io::Write;
+
+#[derive(Debug)]
+struct Knowledge {
+    lower: u32,
+    upper: u32,
+}
+
 fn main() {
-    lambda!(handler)
-}
+    println!("Guess the number!");
 
-fn handler(_: Request, _: Context) -> Result<impl IntoResponse, HandlerError> {
-    // `serde_json::Values` impl `IntoResponse` by default
-    // creating an application/json response
-    Ok(json!({
-    "message": "Go Serverless v1.0! Your function executed successfully!"
-    }))
-}
+    let secret_number = rand::thread_rng().gen_range(1, 101);
+    let mut guesses = 0;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+    let mut knowledge = Knowledge {
+        lower: 1,
+        upper: 100,
+    };
 
-    #[test]
-    fn handler_handles() {
-        let request = Request::default();
-        let expected = json!({
-        "message": "Go Serverless v1.0! Your function executed successfully!"
-        })
-        .into_response();
-        let response = handler(request, Context::default())
-            .expect("expected Ok(_) value")
-            .into_response();
-        assert_eq!(response.body(), expected.body())
+    loop {
+        println!(
+            "Answer is between {} and {}",
+            knowledge.lower, knowledge.upper
+        );
+        print!("Please input your guess: ");
+        io::stdout().flush().expect("Failed to flush STDOUT");
+
+        let mut guess = String::new();
+
+        io::stdin()
+            .read_line(&mut guess)
+            .expect("Failed to read line");
+
+        // Move the cursor one up and re-write the previous line.
+        // This gets rid of the newline added by stdin().read_line call :D
+        print!("\u{001B}[1APlease input your guess: {}", guess.trim_end());
+
+        let guess: u32 = match guess.trim().parse() {
+            Ok(num) => num,
+            Err(_) => {
+                println!(" -> Was that really a number?");
+                continue;
+            }
+        };
+        guesses += 1;
+
+        match guess.cmp(&secret_number) {
+            Ordering::Less => {
+                println!(" -> Too small!");
+                match knowledge.lower.cmp(&guess) {
+                    Ordering::Greater => println!(
+                        "You already knew the answer is at least {}, why waste your guess?!",
+                        knowledge.lower
+                    ),
+                    _ => knowledge.lower = guess + 1,
+                }
+            }
+            Ordering::Greater => {
+                println!(" -> Too big!");
+                match knowledge.upper.cmp(&guess) {
+                    Ordering::Less => println!(
+                        "You already knew the answer is at most {}, why waste your guess?!",
+                        knowledge.upper
+                    ),
+                    _ => knowledge.upper = guess - 1,
+                }
+            }
+            Ordering::Equal => {
+                println!(" -> Correct! You win with {} guesses!", guesses);
+                break;
+            }
+        }
     }
 }
