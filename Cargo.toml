@@ -8,3 +8,4 @@ authors = ["Vesa Laakso <vesa@laakso.me>"]
 lambda_runtime = "0.2"
 lambda_http = "0.1"
 serde_json = "1.0"
+telegram-typings = "^3.6.1"
