@@ -1,6 +1,7 @@
 {
   // List of extensions which should be recommended for users of this workspace.
   "recommendations": [
-    "rust-lang.rust"
+    "rust-lang.rust",
+    "vadimcn.vscode-lldb"
   ]
 }
