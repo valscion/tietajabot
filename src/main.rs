@@ -183,4 +183,44 @@ mod tests {
                 .body()
         )
     }
+
+    #[test]
+    fn formats_name() {
+        use telegram_typings::User;
+        let empty_user_fields = User {
+            first_name: "".to_string(),
+            last_name: None,
+            username: None,
+            id: 0,
+            is_bot: false,
+            language_code: None,
+        };
+        let user_all = User {
+            first_name: "First".to_string(),
+            last_name: Some("Last".to_string()),
+            username: Some("daUser".to_string()),
+            ..empty_user_fields.clone()
+        };
+        let user_all_but_last_name = User {
+            first_name: "First".to_string(),
+            username: Some("daUser".to_string()),
+            ..empty_user_fields.clone()
+        };
+        let user_all_but_username = User {
+            first_name: "First".to_string(),
+            last_name: Some("Last".to_string()),
+            ..empty_user_fields.clone()
+        };
+        let user_only_first_name = User {
+            first_name: "First".to_string(),
+            ..empty_user_fields.clone()
+        };
+        assert_eq!(format_name_for_user(&user_all), "@daUser (First Last)");
+        assert_eq!(
+            format_name_for_user(&user_all_but_last_name),
+            "@daUser (First)"
+        );
+        assert_eq!(format_name_for_user(&user_all_but_username), "First Last");
+        assert_eq!(format_name_for_user(&user_only_first_name), "First");
+    }
 }
