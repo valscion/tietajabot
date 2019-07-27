@@ -65,11 +65,11 @@ fn handler(request: Request, _: Context) -> Result<impl IntoResponse, HandlerErr
         }
         Ok(updates) => match updates {
             TelegramResponse::Error(error) => {
-                let error: serde_json::Value = json!({
+                println!("TELEGRAM_ERROR: {}", error.description);
+                return Ok(json!({
                     "ok": false,
                     "description": error.description
-                });
-                return Err(HandlerError::from(error.as_str().unwrap()));
+                }));
             }
             TelegramResponse::Success(success) => success,
         },
@@ -148,5 +148,39 @@ mod tests {
             .expect("expected Ok(_) value")
             .into_response();
         assert_eq!(response.body(), json!({"ok": true}).into_response().body())
+    }
+
+    #[test]
+    fn handler_handles_errors() {
+        let request_json = include_str!("../fixtures/request.json");
+        let mut request_value: serde_json::Value =
+            serde_json::from_str(&request_json).expect("request.json parse failed");
+
+        *request_value.get_mut("body").expect("get_mut(body) failed") = serde_json::to_value(
+            json!({
+                "ok": false,
+                "description": "Human-readable error description"
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let request_string = serde_json::to_string(&request_value)
+            .expect("Failed to serialize request_value to string");
+
+        let body = lambda_http::Body::from(request_string);
+
+        let mut request = Request::new(body);
+        request
+            .headers_mut()
+            .insert(CONTENT_TYPE, "application/json".parse().unwrap());
+        let response = handler(request, Context::default())
+            .expect("expected Ok(_) value")
+            .into_response();
+        assert_eq!(
+            response.body(),
+            json!({"ok": false, "description": "Human-readable error description"})
+                .into_response()
+                .body()
+        )
     }
 }
