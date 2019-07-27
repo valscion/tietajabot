@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "result": [
+    {
+      "update_id": 101,
+      "message": {
+        "message_id": 1,
+        "from": {
+          "id": 201,
+          "is_bot": false,
+          "first_name": "Vesa",
+          "last_name": "Laakso",
+          "username": "valscion",
+          "language_code": "en"
+        },
+        "chat": {
+          "id": 301,
+          "first_name": "Vesa",
+          "last_name": "Laakso",
+          "username": "valscion",
+          "type": "private"
+        },
+        "date": 1563820529,
+        "text": "/start"
+      }
+    }
+  ]
+}

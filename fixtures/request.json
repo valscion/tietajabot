@@ -60,6 +60,6 @@
     "domainName": "r275xc9bmd.execute-api.us-east-1.amazonaws.com",
     "apiId": "r275xc9bmd"
   },
-  "body": "{\"ok\":true,\"result\":[{\"update_id\":101,\"message\":{\"message_id\":1,\"from\":{\"id\":201,\"is_bot\":false,\"first_name\":\"Vesa\",\"last_name\":\"Laakso\",\"username\":\"valscion\",\"language_code\":\"en\"},\"chat\":{\"id\":301,\"first_name\":\"Vesa\",\"last_name\":\"Laakso\",\"username\":\"valscion\",\"type\":\"private\"},\"date\":1563820529,\"text\":\"/start\"}}]}",
+  "body": "{\"ok\":false,\"description\":\"BODY_VALUE_NOT_FILLED_FOR_TESTS\"}",
   "isBase64Encoded": false
 }

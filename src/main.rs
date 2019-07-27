@@ -126,7 +126,20 @@ mod tests {
 
     #[test]
     fn handler_handles() {
-        let body = lambda_http::Body::from(include_str!("../fixtures/request.json"));
+        let request_json = include_str!("../fixtures/request.json");
+        let mut request_value: serde_json::Value =
+            serde_json::from_str(&request_json).expect("request.json parse failed");
+        let update_json = include_str!("../fixtures/updates.json");
+        let _update_value: serde_json::Value =
+            serde_json::from_str(&update_json).expect("updates.json was not valid JSON");
+
+        *request_value.get_mut("body").expect("get_mut(body) failed") =
+            serde_json::to_value(update_json).unwrap();
+        let request_string = serde_json::to_string(&request_value)
+            .expect("Failed to serialize request_value to string");
+
+        let body = lambda_http::Body::from(request_string);
+
         let mut request = Request::new(body);
         request
             .headers_mut()
