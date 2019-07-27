@@ -9,7 +9,7 @@ fn main() {
     lambda!(handler)
 }
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Default, Debug)]
 struct ApiGatewayBody {
@@ -20,12 +20,27 @@ fn default_api_gateway_body() -> String {
     "{}".to_string()
 }
 
-#[derive(Deserialize, Default, Debug)]
-struct TelegramUpdates {
-    #[serde(default)]
+#[derive(Serialize, Deserialize)]
+struct TelegramSuccessResponse {
+    /// Should always be `true` or Telegram gave a strange response
     ok: bool,
-    #[serde(default)]
+    /// Contains the list of received updates
     result: Vec<telegram_typings::Update>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct TelegramErrorResponse {
+    /// Should always be `false` or Telegram gave a strange response
+    ok: bool,
+    /// The human-readable description of the erroneus result
+    description: String,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(untagged)]
+enum TelegramResponse {
+    Success(TelegramSuccessResponse),
+    Error(TelegramErrorResponse),
 }
 
 fn handler(request: Request, _: Context) -> Result<impl IntoResponse, HandlerError> {
@@ -34,30 +49,74 @@ fn handler(request: Request, _: Context) -> Result<impl IntoResponse, HandlerErr
         .unwrap_or_else(|_parse_err| None)
         .unwrap_or_default();
 
-    let update: TelegramUpdates = serde_json::from_str(body.body.as_str())?;
-    if update.ok != true {
-        let raw_payload: String = request.payload().unwrap().expect("No payload received");
-        let error: String = json!({
-            "ok": false,
-            "request_payload": raw_payload
-        })
-        .to_string();
-        return Err(HandlerError::from(error.as_str()));
-    }
+    let body_value: serde_json::Value =
+        serde_json::from_str(body.body.as_str()).expect("Body was not a valid JSON value");
+    println!(
+        "[\"Received JSON:\", {}]",
+        serde_json::to_string(&body_value).unwrap()
+    );
 
-    for update in &update.result {
-        match &update.message {
-            Some(msg) => {
-                let from = &msg.from;
-                let chat = format!("({}, {})", &msg.chat.id, &msg.chat.type_tl);
-                let text = &msg.text;
-                let date = NaiveDateTime::from_timestamp(msg.date, 0);
-                print!("[{}] {:?} in chat {} sent: {:?}", date, from, chat, text);
+    let possibly_updates: Result<TelegramResponse, serde_json::Error> =
+        serde_json::from_value(body_value);
+    let updates = match possibly_updates {
+        Err(json_err) => {
+            println!("JSON conversion error: {:#?}", json_err);
+            return Ok(json!({"ok": false}));
+        }
+        Ok(updates) => match updates {
+            TelegramResponse::Error(error) => {
+                let error: serde_json::Value = json!({
+                    "ok": false,
+                    "description": error.description
+                });
+                return Err(HandlerError::from(error.as_str().unwrap()));
             }
-            None => print!("Not a message, ignoring..."),
+            TelegramResponse::Success(success) => success,
+        },
+    };
+
+    for update in &updates.result {
+        if let Some(msg) = &update.message {
+            if let Some(from) = &msg.from {
+                if let Some(text) = &msg.text {
+                    let from = format_name_for_user(from);
+                    let time = NaiveDateTime::from_timestamp(msg.date, 0);
+                    println!(
+                        "[{time}] received a message from {from}: {text}",
+                        time = time,
+                        from = from,
+                        text = text,
+                    );
+                }
+            }
         }
     }
     Ok(json!({"ok": true}))
+}
+
+fn format_name_for_user(user: &telegram_typings::User) -> String {
+    if let Some(username) = &user.username {
+        if let Some(last_name) = &user.last_name {
+            format!(
+                "@{username} ({first} {last})",
+                username = username,
+                first = user.first_name,
+                last = last_name
+            )
+        } else {
+            format!(
+                "@{username} ({first})",
+                username = username,
+                first = user.first_name
+            )
+        }
+    } else {
+        if let Some(last_name) = &user.last_name {
+            format!("{first} {last}", first = user.first_name, last = last_name)
+        } else {
+            format!("{first}", first = user.first_name)
+        }
+    }
 }
 
 #[cfg(test)]
