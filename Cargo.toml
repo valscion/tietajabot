@@ -11,3 +11,5 @@ lambda_http = "0.1"
 serde_json = "1.0"
 serde = { version = "*", features = ["derive"] }
 telegram-typings = "^3.6.1"
+log = "0.4.7"
+env_logger = "0.6.2"
