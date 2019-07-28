@@ -1,3 +1,7 @@
+#[macro_use]
+extern crate log;
+extern crate env_logger;
+
 use chrono::NaiveDateTime;
 use lambda_http::{lambda, IntoResponse, Request, RequestExt};
 use lambda_runtime::{error::HandlerError, Context};
@@ -6,6 +10,7 @@ use telegram_typings;
 
 #[cfg_attr(tarpaulin, skip)]
 fn main() {
+    env_logger::init();
     lambda!(handler)
 }
 
@@ -51,8 +56,8 @@ fn handler(request: Request, _: Context) -> Result<impl IntoResponse, HandlerErr
 
     let body_value: serde_json::Value =
         serde_json::from_str(body.body.as_str()).expect("Body was not a valid JSON value");
-    println!(
-        "[\"Received JSON:\", {}]",
+    debug!(
+        "Received JSON: {}",
         serde_json::to_string(&body_value).unwrap()
     );
 
@@ -60,12 +65,12 @@ fn handler(request: Request, _: Context) -> Result<impl IntoResponse, HandlerErr
         serde_json::from_value(body_value);
     let updates = match possibly_updates {
         Err(json_err) => {
-            println!("JSON conversion error: {:#?}", json_err);
+            error!("JSON conversion error: {:#?}", json_err);
             return Ok(json!({"ok": false}));
         }
         Ok(updates) => match updates {
             TelegramResponse::Error(error) => {
-                println!("TELEGRAM_ERROR: {}", error.description);
+                error!("TELEGRAM_ERROR: {}", error.description);
                 return Ok(json!({
                     "ok": false,
                     "description": error.description
@@ -81,8 +86,8 @@ fn handler(request: Request, _: Context) -> Result<impl IntoResponse, HandlerErr
                 if let Some(text) = &msg.text {
                     let from = format_name_for_user(from);
                     let time = NaiveDateTime::from_timestamp(msg.date, 0);
-                    println!(
-                        "[{time}] received a message from {from}: {text}",
+                    info!(
+                        "Received a message sent at {time} from {from}: {text}",
                         time = time,
                         from = from,
                         text = text,
@@ -124,8 +129,14 @@ mod tests {
     use super::*;
     use lambda_http::http::header::CONTENT_TYPE;
 
+    fn setup() {
+        let _ = env_logger::builder().is_test(true).try_init();
+    }
+
     #[test]
     fn handler_handles() {
+        setup();
+
         let request_json = include_str!("../fixtures/request.json");
         let mut request_value: serde_json::Value =
             serde_json::from_str(&request_json).expect("request.json parse failed");
@@ -152,6 +163,8 @@ mod tests {
 
     #[test]
     fn handler_handles_errors() {
+        setup();
+
         let request_json = include_str!("../fixtures/request.json");
         let mut request_value: serde_json::Value =
             serde_json::from_str(&request_json).expect("request.json parse failed");
@@ -186,6 +199,8 @@ mod tests {
 
     #[test]
     fn formats_name() {
+        setup();
+
         use telegram_typings::User;
         let empty_user_fields = User {
             first_name: "".to_string(),
